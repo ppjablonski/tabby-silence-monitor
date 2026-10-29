@@ -1,6 +1,7 @@
-# Windows manual verification — 0.1.1 / Tabby 1.0.238
+# Windows manual verification — 0.2.0 / Tabby 1.0.238
 
-Status: **not run**. Record date, Windows version, Tabby version, artifact SHA-256,
+Status: **0.2.0 not run**. The user confirmed basic 0.1.1 operation, including
+split panes and desktop notifications. Record date, Windows version, Tabby version, artifact SHA-256,
 actual plugin directory and pass/fail observations. Do not record terminal contents
 or connection details in the repository.
 
@@ -57,3 +58,23 @@ later. This is expected. To hold silence longer, use `sleep 30`.
   record suppression behavior. No duplicate fallback alerts are expected.
 - Fully quit, uninstall only the plugin folder, restart: menu/settings disappear.
   Reinstall the same ZIP: controls return without installing dependencies.
+
+## Notification click-to-focus (0.2.0)
+
+- Produce a silence notification in a background tab. Click it: select that tab
+  and verify keyboard input goes to the intended terminal without an extra click.
+- Repeat with Tabby minimized, hidden in the tray and behind another application:
+  the owning window should be shown/restored and brought to the foreground.
+- Generate alerts for two panes in one split and for another tab; click in a
+  different order than arrival. Each click must focus its own pane. Repeat with
+  two Tabby windows; the clicked alert should present only its owning window.
+- While an alert is pending, move its pane within the window: clicking should
+  find the new parent tab. With another split maximized, clicking a hidden pane's
+  alert should reveal and focus that pane.
+- Generate another activity/silence cycle in the same pane: replace its previous
+  notification; alerts for other panes must remain independent.
+- Disable monitoring, close the session, reconnect or close the pane before
+  clicking: the previous alert should be closed; stale OS history must not focus
+  a different session or recreate a terminal.
+- Check immediate banner clicks and clicks from Windows notification history
+  separately. Dismissed/expired OS notifications may no longer deliver click events.

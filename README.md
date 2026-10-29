@@ -1,6 +1,6 @@
 # Tabby Silence Monitor
 
-Version **0.1.1** — targets **Tabby 1.0.238**, Windows 10/11, including a per-user
+Version **0.2.0** — targets **Tabby 1.0.238**, Windows 10/11, including a per-user
 Scoop installation. Built entirely on Linux; Windows needs no Node.js, npm,
 compiler, or dependency installation.
 
@@ -12,9 +12,9 @@ finished or succeeded.
 
 ## Install on Windows
 
-1. Obtain `release/tabby-silence-monitor-0.1.1-windows.zip` from this build.
+1. Obtain `release/tabby-silence-monitor-0.2.0-windows.zip` from this build.
    Optionally compare its SHA-256 with the adjacent `.zip.sha256` file using
-   PowerShell `Get-FileHash .\tabby-silence-monitor-0.1.1-windows.zip`.
+   PowerShell `Get-FileHash .\tabby-silence-monitor-0.2.0-windows.zip`.
 2. In Tabby, go to **Settings > Plugins > Open Plugins Directory**. Use that
    actual directory: Scoop/portable installs can keep data outside `%APPDATA%`.
 3. Completely quit Tabby, including any tray instance.
@@ -41,8 +41,8 @@ finished or succeeded.
    silence**. Monitoring is off by default.
 
 The artifact is verified on Linux for contents, module loading with host API
-substitutes, and absence of bundled runtime dependencies. Installation and desktop
-notification delivery on Windows remain subject to the manual checks below.
+substitutes, and absence of bundled runtime dependencies. The user confirmed 0.1.1 installation, split-pane monitoring and notification
+delivery on Windows. The 0.2.0 click-to-focus behavior still needs Windows verification.
 
 ## Use and configure
 
@@ -56,6 +56,13 @@ notification delivery on Windows remain subject to the manual checks below.
   echo of typed characters is received output and does reset it.
 - A desktop notification includes the terminal title and a pane number scoped to
   the current window. The standard tab activity marker is also requested.
+- Clicking a notification selects its current tab, focuses the corresponding split
+  pane, and brings that Tabby window to the foreground (including restoring a
+  minimized window). Notifications from different panes/windows remain independent;
+  the last one clicked determines focus. Receiving an alert alone never steals focus.
+- Only the latest notification for each pane is kept. Clicking dismisses it.
+  Disabling monitoring, closing/replacing the session, or destroying the pane closes
+  its notification and removes click handlers. Stale alerts cannot reopen a session.
 - A continuous silence period produces one notification. Further output rearms
   monitoring. Reconnecting replaces the old session timer and waits for new output;
   the pane's enable/disable choice is preserved.
@@ -90,7 +97,8 @@ section from Tabby's configuration after uninstalling; it otherwise stays inert.
 - No terminal contents are logged, stored or transmitted. Notifications do show
   terminal titles in the desktop notification system. There is no runtime network
   communication, command parsing, process inspection or native code.
-- **Windows integration has not been tested here.** See [WINDOWS-TESTS.md](WINDOWS-TESTS.md).
+- **No Windows tests were run by the Linux agent.** The user confirmed basic
+  0.1.1 operation; 0.2.0 click-to-focus is unverified on Windows. See [WINDOWS-TESTS.md](WINDOWS-TESTS.md).
 
 ## Develop on Linux
 
@@ -123,3 +131,11 @@ silently rejects the 0.1.0 package before loading the module. Replace the old
 plugin directory with 0.1.1 and fully restart Tabby. The ZIP is now validated
 through the actual upstream discovery/parser functions before its module is
 smoke-tested. Windows integration remains unverified.
+
+## Changes in 0.2.0
+
+Click-to-focus notifications use public Tabby 1.0.238 APIs: `getParentTab`,
+`selectTab`, split `focus` and `HostWindowService.bringToFront`, inside Angular's
+`NgZone`. The window service restores minimized windows. One live notification
+per pane bounds resource use and keeps multiple panes independent. Handlers are
+removed on dismissal, replacement, disable and session/pane cleanup.

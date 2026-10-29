@@ -1,5 +1,5 @@
-import { Inject, Injectable } from '@angular/core'
-import { ConfigService } from 'tabby-core'
+import { Inject, Injectable, NgZone } from '@angular/core'
+import { AppService, ConfigService, HostWindowService } from 'tabby-core'
 import { BaseSession, BaseTerminalTabComponent, TerminalDecorator } from 'tabby-terminal'
 import { Subscription } from 'rxjs'
 import { thresholdSeconds } from './detector'
@@ -9,6 +9,7 @@ interface PaneState {
     enabled: boolean
     session?: BaseSession
     monitor?: SessionMonitor
+    notification?: Notification
     subscriptions: Subscription
 }
 
@@ -18,7 +19,12 @@ export class SilenceDecorator extends TerminalDecorator {
     private panes = new WeakMap<BaseTerminalTabComponent<any>, PaneState>()
     private nextID = 0
 
-    constructor (@Inject(ConfigService) private config: ConfigService) { super() }
+    constructor (
+        @Inject(ConfigService) private config: ConfigService,
+        @Inject(AppService) private app: AppService,
+        @Inject(HostWindowService) private hostWindow: HostWindowService,
+        @Inject(NgZone) private zone: NgZone,
+    ) { super() }
 
     attach (tab: BaseTerminalTabComponent<any>): void {
         if (this.panes.has(tab)) { return }
@@ -36,16 +42,9 @@ export class SilenceDecorator extends TerminalDecorator {
             if (session) {
                 state.monitor = new SessionMonitor(session, this.threshold(), state.enabled, () => {
                     tab.displayActivity()
-                    // Same renderer Notification API as Tabby's built-in menu.
-                    // No notification object or terminal content is retained.
-                    try {
-                        new Notification('Terminal silence', {
-                            body: `${tab.customTitle || tab.title || 'Terminal'} (pane ${id}): no output for ${this.threshold()} seconds.`,
-                        })
-                    } catch {
-                        // OS may refuse notifications; the activity marker remains.
-                    }
+                    this.showNotification(tab, state, id)
                 }, undefined, () => {
+                    this.clearNotification(state)
                     state.session = undefined
                     state.monitor = undefined
                 })
@@ -60,6 +59,7 @@ export class SilenceDecorator extends TerminalDecorator {
     detach (tab: BaseTerminalTabComponent<any>): void {
         const state = this.panes.get(tab)
         if (state) {
+            this.clearNotification(state)
             state.subscriptions.unsubscribe()
             state.monitor?.dispose()
             state.monitor = undefined
@@ -76,6 +76,50 @@ export class SilenceDecorator extends TerminalDecorator {
         const state = this.panes.get(tab)!
         state.enabled = !state.enabled
         state.monitor?.setEnabled(state.enabled)
+        if (!state.enabled) { this.clearNotification(state) }
+    }
+
+    private showNotification (tab: BaseTerminalTabComponent<any>, state: PaneState, id: number): void {
+        this.clearNotification(state)
+        const session = state.session
+        try {
+            const notification = new Notification('Terminal silence', {
+                body: `${tab.customTitle || tab.title || 'Terminal'} (pane ${id}): no output for ${this.threshold()} seconds.`,
+            })
+            state.notification = notification
+            notification.onclick = () => this.zone.run(() => {
+                if (this.panes.get(tab) !== state || state.session !== session || state.notification !== notification) { return }
+                // Resolve the current parent: the pane may have moved since the alert.
+                const parent = this.app.getParentTab(tab)
+                const root = parent ?? tab
+                if (!this.app.tabs.includes(root)) { return }
+                this.app.selectTab(root)
+                parent?.focus(tab)
+                this.hostWindow.bringToFront()
+                this.clearNotification(state)
+            })
+            const release = () => {
+                notification.onclick = null
+                notification.onclose = null
+                notification.onerror = null
+                if (state.notification === notification) { state.notification = undefined }
+            }
+            notification.onclose = release
+            notification.onerror = release
+        } catch {
+            // OS may refuse notifications; the activity marker remains.
+        }
+    }
+
+    private clearNotification (state: PaneState): void {
+        const notification = state.notification
+        state.notification = undefined
+        if (!notification) { return }
+        // Remove closures before close(), including when Windows keeps history.
+        notification.onclick = null
+        notification.onclose = null
+        notification.onerror = null
+        try { notification.close() } catch { /* Already dismissed by the OS. */ }
     }
 
     private threshold (): number { return thresholdSeconds(this.config.store.silenceMonitor?.thresholdSeconds) }

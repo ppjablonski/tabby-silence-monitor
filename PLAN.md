@@ -96,3 +96,23 @@ module-only smoke testing was insufficient. Windows verification remains pending
 
 0.1.1 Linux verification: all **17 tests passed**, production build passed, and
 the extracted ZIP passed actual-loader discovery plus the module smoke test.
+
+## 0.2.0 notification activation
+
+The user confirmed Windows 0.1.1 loading, split monitoring and notifications.
+For click-to-focus, inspect the same tag's `app.service.ts` (`getParentTab`,
+`selectTab`), `splitTab.component.ts` (`focus`) and Electron host-window service
+(`bringToFront` -> IPC -> restore/present). Use these public methods within
+`NgZone.run`; do not focus automatically on notification arrival. Resolve the
+parent at click time to handle pane moves. Window services are renderer-scoped.
+
+Keep only one notification per pane; independent panes keep independent alerts.
+On dismissal, replacement, disable, session close/reconnect or detach, remove
+handlers and release/close the notification. Guard queued stale callbacks against
+changed session, pane state or notification identity. No terminal may be retained
+after detach through notification callbacks. Add tests for split/raw tabs,
+click order, moved/removed panes, multiple windows and all cleanup paths.
+
+Linux validation: **27 tests passed** and production build passed. Package smoke
+verification also exercises clicking the compiled notification. Windows focus,
+restoration, and notification-history click delivery remain manually unverified.

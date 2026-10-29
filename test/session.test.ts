@@ -56,7 +56,7 @@ test('decorator handles duplicate attachment, split panes, replacement, disable 
     const h = harness()
     const { SilenceDecorator } = h.load('src/integration.ts')
     const config = new h.ConfigService()
-    const decorator = new SilenceDecorator(config)
+    const decorator = new SilenceDecorator(config, h.app, h.hostWindow, h.zone)
     const a = new h.terminal.BaseTerminalTabComponent()
     const b = new h.terminal.BaseTerminalTabComponent()
     const old = new h.Session(); const second = new h.Session()
@@ -95,7 +95,7 @@ test('settings changes affect pending timers without enabling existing panes', (
     const { SilenceDecorator } = h.load('src/integration.ts')
     const config = new h.ConfigService()
     config.store.silenceMonitor.autoMonitor = false
-    const decorator = new SilenceDecorator(config)
+    const decorator = new SilenceDecorator(config, h.app, h.hostWindow, h.zone)
     const tab = new h.terminal.BaseTerminalTabComponent()
     const session = new h.Session()
     decorator.attach(tab); tab.setSession(session)
@@ -138,7 +138,7 @@ test('module provides validated settings and a per-terminal checkbox using the s
     const decoratorToken = providers.find((p: any) => p.provide === h.terminal.TerminalDecorator).useExisting
     const config = new h.ConfigService()
     config.store.silenceMonitor.autoMonitor = false
-    const decorator = new decoratorToken(config)
+    const decorator = new decoratorToken(config, h.app, h.hostWindow, h.zone)
     const Menu = providers.find((p: any) => p.provide?.name === 'TabContextMenuItemProvider').useClass
     const menu = new Menu(decorator)
     assert.equal((await menu.getItems({})).length, 0)

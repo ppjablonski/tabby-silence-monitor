@@ -23,7 +23,20 @@ export class FakeClock {
 
 export function harness (bundle?: string) {
     const clock = new FakeClock()
-    const notifications: { title: string, body: string }[] = []
+    class FakeNotification {
+        body: string
+        onclick: (() => void) | null = null
+        onclose: (() => void) | null = null
+        onerror: (() => void) | null = null
+        closed = false
+        constructor (public title: string, options: { body: string }) {
+            this.body = options.body
+            notifications.push(this)
+        }
+        close () { this.closed = true; this.onclose?.() }
+        click () { this.onclick?.() }
+    }
+    const notifications: FakeNotification[] = []
     const capturedModules: any[] = []
     const components: any[] = []
     class SubscriptionContainer {
@@ -36,10 +49,26 @@ export function harness (bundle?: string) {
         changed$ = new rxjs.Subject<void>()
         save () { this.changed$.next(); return Promise.resolve() }
     }
-    const core = { SubscriptionContainer, ConfigService, ConfigProvider: class {}, TabContextMenuItemProvider: class {}, default: class {} }
+    class AppService {
+        tabs: any[] = []
+        activeTab: any = null
+        selections: any[] = []
+        getParentTab (tab: any) { return this.tabs.find(root => root.getAllTabs?.().includes(tab)) ?? null }
+        selectTab (tab: any) { this.activeTab = tab; this.selections.push(tab) }
+    }
+    class HostWindowService {
+        presentations = 0
+        bringToFront () { this.presentations++ }
+    }
+    class NgZone { runs = 0; run (callback: () => void) { this.runs++; callback() } }
+    const app = new AppService()
+    const hostWindow = new HostWindowService()
+    const zone = new NgZone()
+    const core = { AppService, HostWindowService, SubscriptionContainer, ConfigService, ConfigProvider: class {}, TabContextMenuItemProvider: class {}, default: class {} }
     const cache = new Map<string, any>()
     let terminal: any
     const angular = {
+        NgZone,
         Inject: () => () => undefined,
         Injectable: () => (target: any) => target,
         Component: (meta: any) => (target: any) => { components.push({ target, meta }); return target },
@@ -51,9 +80,7 @@ export function harness (bundle?: string) {
         vm.runInNewContext(source, {
             module, exports: module.exports, Buffer,
             setTimeout: clock.set, clearTimeout: clock.clear,
-            Notification: class {
-                constructor (title: string, options: { body: string }) { notifications.push({ title, body: options.body }) }
-            },
+            Notification: FakeNotification,
             require: (id: string) => {
                 if (id === 'rxjs') { return rxjs }
                 if (id === 'tabby-core') { return core }
@@ -95,5 +122,5 @@ export function harness (bundle?: string) {
         destroyed$ = new rxjs.Subject<void>()
     }
     const exports = bundle ? execute(path.resolve(bundle), fs.readFileSync(bundle, 'utf8')) : undefined
-    return { clock, notifications, load, terminal, Session, ConfigService, capturedModules, components, exports }
+    return { app, hostWindow, zone, clock, notifications, load, terminal, Session, ConfigService, capturedModules, components, exports }
 }
