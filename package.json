@@ -1,10 +1,16 @@
 {
   "name": "tabby-silence-monitor",
   "version": "0.2.0",
-  "description": "Per-session terminal output inactivity notifications for Tabby 1.0.238",
+  "description": "Desktop notifications for terminal output inactivity, with per-pane monitoring and click-to-focus in Tabby.",
   "license": "MIT",
   "keywords": [
-    "tabby-plugin"
+    "tabby-plugin",
+    "tabby",
+    "terminal",
+    "inactivity",
+    "notifications",
+    "ssh",
+    "wsl"
   ],
   "main": "dist/index.js",
   "files": [
@@ -31,5 +37,13 @@
     "webpack": "5.112.2",
     "webpack-cli": "5.1.4"
   },
-  "author": "tabby-silence-monitor contributors"
+  "author": "tabby-silence-monitor contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ppjablonski/tabby-silence-monitor.git"
+  },
+  "homepage": "https://github.com/ppjablonski/tabby-silence-monitor#readme",
+  "bugs": {
+    "url": "https://github.com/ppjablonski/tabby-silence-monitor/issues"
+  }
 }

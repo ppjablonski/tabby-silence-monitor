@@ -5,6 +5,9 @@ timer, including split panes, local shells, WSL and SSH sessions.
 
 Version **0.2.0**, targeting **Tabby 1.0.238** on Windows 10/11.
 
+[Source code](https://github.com/ppjablonski/tabby-silence-monitor) ·
+[Report an issue](https://github.com/ppjablonski/tabby-silence-monitor/issues)
+
 ## Installation
 
 In Tabby, open **Settings > Plugins**, search for **Silence Monitor**, install it
