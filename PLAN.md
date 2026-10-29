@@ -59,3 +59,18 @@ Scoop data-directory behavior and pane marker rendering need Windows testing.
 - https://github.com/Eugeny/tabby/blob/v1.0.238/app/src/plugins.ts
 - https://github.com/Eugeny/tabby-save-output (decorator, module, build metadata)
 - https://github.com/Eugeny/tabby-clippy (decorator example)
+
+## Implementation status
+
+Stages 1–4 complete: deterministic detector, per-session middleware/lifecycle
+adapter, context menu, settings, desktop Notification and activity marker.
+Linux tests cover raw byte identity, control filtering/local echo isolation,
+independent panes, session replacement, cleanup and enable/disable behavior.
+Reference plugin commits inspected: save-output `f0d0990`, clippy `cc2dbd0`.
+
+Build tools and host API declarations are development-only. npm audit identifies
+high-severity advisories in Angular 15 core/common; upgrading the plugin's Angular
+major would break host compatibility. No Angular code is shipped in the bundle;
+Tabby supplies its own Angular. The plugin uses static templates, no HTTP client,
+SSR, dynamic HTML, SVG or i18n inputs. Host dependency upgrades belong to Tabby.
+Webpack was updated to 5.112.2 to address its build-time audit findings.

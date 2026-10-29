@@ -1,23 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { SilenceDetector, Clock, thresholdSeconds } from '../src/detector'
+import { SilenceDetector, thresholdSeconds } from '../src/detector'
 
-export class FakeClock implements Clock {
-    now = 0
-    next = 0
-    tasks = new Map<number, { at: number, callback: () => void }>()
-    set (callback: () => void, delay: number): number {
-        this.tasks.set(++this.next, { at: this.now + delay, callback })
-        return this.next
-    }
-    clear (handle: unknown): void { this.tasks.delete(handle as number) }
-    tick (ms: number): void {
-        this.now += ms
-        for (const [id, task] of this.tasks) {
-            if (task.at <= this.now) { this.tasks.delete(id); task.callback() }
-        }
-    }
-}
+import { FakeClock } from './helpers'
 
 function setup () {
     const clock = new FakeClock()

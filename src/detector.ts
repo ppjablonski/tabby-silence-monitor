@@ -40,7 +40,9 @@ export class SilenceDetector {
     }
 
     setThreshold (seconds: number): void {
-        this.threshold = thresholdSeconds(seconds)
+        const next = thresholdSeconds(seconds)
+        if (next === this.threshold) { return }
+        this.threshold = next
         // A pending period restarts from the settings change; a notified period
         // stays silent until new output. This never invents initial activity.
         if (this.timer !== undefined) { this.activity() }
