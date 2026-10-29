@@ -1,141 +1,57 @@
 # Tabby Silence Monitor
 
-Version **0.2.0** — targets **Tabby 1.0.238**, Windows 10/11, including a per-user
-Scoop installation. Built entirely on Linux; Windows needs no Node.js, npm,
-compiler, or dependency installation.
+Desktop notifications when terminal output stops. Each terminal pane has its own
+timer, including split panes, local shells, WSL and SSH sessions.
 
-Notifies once when a monitored terminal receives no output for **5 seconds**
-after activity. Each terminal pane has an independent timer. New output resets
-and rearms it. Local shells, WSL, SSH and nested SSH use the same output pipeline.
-This detects output inactivity only; a notification does not mean a command has
-finished or succeeded.
+Version **0.2.0**, targeting **Tabby 1.0.238** on Windows 10/11.
 
-## Install on Windows
+## Installation
 
-1. Obtain `release/tabby-silence-monitor-0.2.0-windows.zip` from this build.
-   Optionally compare its SHA-256 with the adjacent `.zip.sha256` file using
-   PowerShell `Get-FileHash .\tabby-silence-monitor-0.2.0-windows.zip`.
-2. In Tabby, go to **Settings > Plugins > Open Plugins Directory**. Use that
-   actual directory: Scoop/portable installs can keep data outside `%APPDATA%`.
-3. Completely quit Tabby, including any tray instance.
-4. Extract the ZIP **inside the opened plugins directory**. The resulting layout
-   must be:
+In Tabby, open **Settings > Plugins**, search for **Silence Monitor**, install it
+and restart Tabby.
 
-   ```text
-   <plugins directory>\
-     node_modules\
-       tabby-silence-monitor\
-         package.json
-         dist\index.js
-         README.md
-         PLAN.md
-         WINDOWS-TESTS.md
-         LICENSE
-   ```
+For a local ZIP installation, open **Settings > Plugins > Open Plugins Directory**,
+quit Tabby completely (including the tray instance), and extract the release ZIP
+there. It includes the `node_modules/tabby-silence-monitor` directory. Restart
+Tabby after installation or upgrade.
 
-   The ZIP already includes `node_modules`; avoid adding another level. Do not copy only `dist`, extract into Scoop's
-   application binaries, or run npm on Windows. Tabby's loader scans `plugins/node_modules` for child
-   `tabby-*` package directories, reads the `tabby-plugin` keyword and loads `main`.
-5. Start Tabby. Confirm **Silence Monitor** appears in Settings.
-6. Right-click inside the desired terminal pane and enable **Monitor terminal
-   silence**. Monitoring is off by default.
+## Usage
 
-The artifact is verified on Linux for contents, module loading with host API
-substitutes, and absence of bundled runtime dependencies. The user confirmed 0.1.1 installation, split-pane monitoring and notification
-delivery on Windows. The 0.2.0 click-to-focus behavior still needs Windows verification.
+1. Right-click inside a terminal pane and enable **Monitor terminal silence**.
+2. After output arrives, the plugin waits for **5 seconds** without further output
+   and sends one notification. New output resets the timer and rearms monitoring.
+3. Click the notification to bring its Tabby window to the foreground, select the
+   correct tab and focus the corresponding split pane.
 
-## Use and configure
+Monitoring is off by default. In **Settings > Silence Monitor**, set the threshold
+from **1 to 3600 seconds** or enable automatic monitoring for new panes. Existing
+panes keep their individual enable/disable setting. Enabling a pane waits for new
+output; disabling it cancels its timer and closes its notification.
 
-- **Settings > Silence Monitor**: threshold from 1 to 3600 seconds; default 5.
-- Enable **Automatically monitor newly initialized terminal panes** to monitor
-  future panes. It does not change monitoring in existing panes.
-- The terminal context-menu checkbox enables/disables only that pane. Enabling
-  waits for the next output; disabling cancels the pending notification.
-- After the first nonempty output chunk, every received chunk, including control
-  sequences, resets the timer. Keyboard input alone does not reset it. Remote
-  echo of typed characters is received output and does reset it.
-- A desktop notification includes the terminal title and a pane number scoped to
-  the current window. The standard tab activity marker is also requested.
-- Clicking a notification selects its current tab, focuses the corresponding split
-  pane, and brings that Tabby window to the foreground (including restoring a
-  minimized window). Notifications from different panes/windows remain independent;
-  the last one clicked determines focus. Receiving an alert alone never steals focus.
-- Only the latest notification for each pane is kept. Clicking dismisses it.
-  Disabling monitoring, closing/replacing the session, or destroying the pane closes
-  its notification and removes click handlers. Stale alerts cannot reopen a session.
-- A continuous silence period produces one notification. Further output rearms
-  monitoring. Reconnecting replaces the old session timer and waits for new output;
-  the pane's enable/disable choice is preserved.
-- Changing the threshold restarts pending timers from the settings change. It
-  never starts a timer for an idle pane or rearms an already notified period.
-  Reopening Tabby resets per-pane choices to the automatic-monitoring default.
+Notifications from different panes are independent. Each pane keeps only its
+latest notification; the last notification clicked determines focus. Alerts do
+not take focus until clicked. Closing or reconnecting a session removes its old
+notification. Changing the threshold restarts pending timers from that moment.
 
-## Uninstall or upgrade
+## Limitations and privacy
 
-Quit Tabby completely. Delete only `node_modules/tabby-silence-monitor`
-inside the plugins directory, then restart Tabby. Upgrading uses the same procedure,
-followed by extracting the new package. Optional: remove the `silenceMonitor`
-section from Tabby's configuration after uninstalling; it otherwise stays inert.
+- Silence means no received output, not command completion or success. Control
+  sequences and remote echo count as output; keyboard input alone does not.
+- A pane may need to be shown once before monitoring starts. After initialization,
+  monitoring continues in background tabs and panes.
+- Nested SSH connections share the enclosing terminal's timer. Periodic output
+  prevents a silence alert.
+- Windows notification settings can suppress alerts. Sleep or a blocked application
+  can delay them. Dismissed or expired notifications may no longer respond to clicks.
+- Terminal contents are never logged, stored or transmitted. Notifications display
+  the terminal title. The plugin makes no network requests.
 
-## Limitations
+## Uninstallation
 
-- Compatibility was researched against the exact **v1.0.238** source tag. Other
-  Tabby versions are unverified. Its Angular 15/RxJS 7 and Tabby modules must be
-  supplied by the host; none are bundled or separately installed on Windows.
-- Public terminal decorators attach when the frontend initializes. A pane never
-  shown may not yet be monitored; bytes before attachment cannot be observed.
-  Once attached, switching panes/tabs does not stop monitoring.
-- Nested SSH is part of the enclosing PTY: it has one timer, not a separate timer
-  for each nested connection. Periodic received output prevents a silence alert.
-- Tabby's public activity marker is shared with ordinary output activity. Its
-  visibility, especially on focused panes and split headers, depends on Tabby.
-- Windows notification permissions, Do Not Disturb/Focus Assist, and Tabby's OS
-  notification registration can affect delivery. There is no retry or duplicate
-  fallback notification; the activity marker is still requested.
-- Timers follow Electron's event loop. Sleep, suspension or a blocked renderer
-  can delay notification delivery. Output from after resume rearms normally.
-- No terminal contents are logged, stored or transmitted. Notifications do show
-  terminal titles in the desktop notification system. There is no runtime network
-  communication, command parsing, process inspection or native code.
-- **No Windows tests were run by the Linux agent.** The user confirmed basic
-  0.1.1 operation; 0.2.0 click-to-focus is unverified on Windows. See [WINDOWS-TESTS.md](WINDOWS-TESTS.md).
+Remove the plugin in **Settings > Plugins** and restart Tabby. For a manual
+installation, quit Tabby and delete `node_modules/tabby-silence-monitor` from the
+plugins directory.
 
-## Develop on Linux
+## License
 
-Requires Node.js 18.20+ and npm, Python 3 for ZIP creation. No native build toolchain.
-
-```sh
-npm ci
-npm test
-npm run package
-```
-
-The lockfile pins all development dependencies. `.npmrc` skips dependency install
-scripts and legacy peer resolution avoids pulling unrelated Tabby peer packages.
-Angular and Tabby dependencies are for host API typechecking only; webpack keeps
-the runtime imports external. `npm run build` typechecks and produces a production
-CommonJS bundle. `npm run package` builds, creates the ZIP and SHA-256 checksum,
-checks its exact contents, validates discovery using the actual Tabby 1.0.238 metadata parser, extracts it into a temporary directory and smoke-loads
-its entry point with simulated host APIs. No npm or GitHub publishing occurs.
-
-Tests use deterministic timers, the actual v1.0.238 middleware-stack source as a
-test-only MIT fixture, RxJS 7, and host substitutes for Angular/Tabby UI services.
-They do not run Electron or prove Windows notification delivery. See
-[PLAN.md](PLAN.md) for source links, API decisions and dependency audit limitations.
-
-## Changes in 0.1.1
-
-Fix plugin discovery: include `author` in both source and packaged manifests.
-Tabby 1.0.238 dereferences `author.name` even when the field is missing, so it
-silently rejects the 0.1.0 package before loading the module. Replace the old
-plugin directory with 0.1.1 and fully restart Tabby. The ZIP is now validated
-through the actual upstream discovery/parser functions before its module is
-smoke-tested. Windows integration remains unverified.
-
-## Changes in 0.2.0
-
-Click-to-focus notifications use public Tabby 1.0.238 APIs: `getParentTab`,
-`selectTab`, split `focus` and `HostWindowService.bringToFront`, inside Angular's
-`NgZone`. The window service restores minimized windows. One live notification
-per pane bounds resource use and keeps multiple panes independent. Handlers are
-removed on dismissal, replacement, disable and session/pane cleanup.
+MIT.

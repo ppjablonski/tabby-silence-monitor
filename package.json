@@ -8,11 +8,7 @@
   ],
   "main": "dist/index.js",
   "files": [
-    "dist/index.js",
-    "README.md",
-    "PLAN.md",
-    "WINDOWS-TESTS.md",
-    "LICENSE"
+    "dist/index.js"
   ],
   "scripts": {
     "test": "npm run build && tsx --test test/*.test.ts",
