@@ -15,7 +15,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "tsx --test test/*.test.ts",
+    "test": "npm run build && tsx --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "build": "npm run typecheck && webpack --mode production",
     "package": "npm run build && python3 scripts/package.py"

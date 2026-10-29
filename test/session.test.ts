@@ -130,3 +130,33 @@ test('observation precedes downstream control filtering and excludes synthesized
     session.middleware.feedFromSession(Buffer.from('\x1b]0;title\x07'))
     h.clock.tick(5000); assert.equal(hits, 1)
 })
+
+test('module provides validated settings and a per-terminal checkbox using the shared decorator', async () => {
+    const h = harness()
+    h.load('src/index.ts')
+    const providers = h.capturedModules[0].providers
+    const decoratorToken = providers.find((p: any) => p.provide === h.terminal.TerminalDecorator).useExisting
+    const config = new h.ConfigService()
+    config.store.silenceMonitor.autoMonitor = false
+    const decorator = new decoratorToken(config)
+    const Menu = providers.find((p: any) => p.provide?.name === 'TabContextMenuItemProvider').useClass
+    const menu = new Menu(decorator)
+    assert.equal((await menu.getItems({})).length, 0)
+    const tab = new h.terminal.BaseTerminalTabComponent()
+    tab.setSession(new h.Session())
+    let items = await menu.getItems(tab)
+    assert.equal(items[0].checked, false)
+    items[0].click()
+    items = await menu.getItems(tab)
+    assert.equal(items[0].checked, true)
+    const Settings = h.components[0].target
+    const settings = new Settings(config)
+    for (const invalid of [null, NaN, Infinity, 0, 3601, '5']) {
+        settings.updateThreshold(invalid)
+        assert.equal(config.store.silenceMonitor.thresholdSeconds, 5)
+    }
+    settings.updateThreshold(1); assert.equal(config.store.silenceMonitor.thresholdSeconds, 1)
+    settings.updateThreshold(3600); assert.equal(config.store.silenceMonitor.thresholdSeconds, 3600)
+    settings.updateAuto(true); assert.equal(config.store.silenceMonitor.autoMonitor, true)
+    decorator.detach(tab)
+})

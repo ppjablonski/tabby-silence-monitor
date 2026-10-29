@@ -4,3 +4,5 @@ build/
 *.tgz
 *.zip
 .env
+
+release/

@@ -35,9 +35,10 @@ Target: Windows 10/11, Scoop Tabby **1.0.238**; build entirely on Linux.
 - Use renderer `Notification` just as Tabby's built-in notification menu does;
   `NotificationsService` is an in-app toast service. Use `displayActivity()` for
   the standard activity marker, without clearing unrelated activity markers.
-- ZIP contains `tabby-silence-monitor/package.json`, `dist/index.js`, and docs.
+- ZIP contains `node_modules/tabby-silence-monitor/package.json`, the package's
+  `dist/index.js`, and docs.
   Extract inside Settings > Plugins > Open Plugins Directory. Loader explicitly
-  scans direct child `tabby-*` packages and reads keyword/main. No npm, native
+  scans `plugins/node_modules` for child `tabby-*` packages and reads keyword/main. No npm, native
   modules, runtime dependencies or install scripts required on Windows.
 
 ## Limitations to verify on Windows
@@ -74,3 +75,11 @@ major would break host compatibility. No Angular code is shipped in the bundle;
 Tabby supplies its own Angular. The plugin uses static templates, no HTTP client,
 SSR, dynamic HTML, SVG or i18n inputs. Host dependency upgrades belong to Tabby.
 Webpack was updated to 5.112.2 to address its build-time audit findings.
+
+Stage 5 complete: production bundle (~8 KiB), deterministic ZIP with the verified
+`plugins/node_modules/tabby-silence-monitor` extraction layout, SHA-256 checksum,
+exact-content/CRC checks and extracted-bundle smoke test. Runtime manifest omits
+build scripts and development dependencies. Installation, removal, behavior and
+Windows scenarios are documented. Final Linux validation: **16 automated tests
+passed**, TypeScript check and production build passed, package smoke test passed.
+Windows/Electron integration remains untested; no release has been published.
