@@ -83,3 +83,16 @@ build scripts and development dependencies. Installation, removal, behavior and
 Windows scenarios are documented. Final Linux validation: **16 automated tests
 passed**, TypeScript check and production build passed, package smoke test passed.
 Windows/Electron integration remains untested; no release has been published.
+
+## 0.1.1 discovery correction
+
+Windows feedback exposed an omitted required-in-practice manifest field: the
+1.0.238 loader unconditionally reads `info.author.name`. Missing `author` causes
+`parsePluginInfo` to catch a TypeError and discard the plugin before module load.
+Add author to source and ZIP metadata, bump to 0.1.1, and execute the actual
+upstream discovery/parser functions in regression tests and against every
+extracted release. The regression first reproduced rejection with 0.1.0 metadata;
+module-only smoke testing was insufficient. Windows verification remains pending.
+
+0.1.1 Linux verification: all **17 tests passed**, production build passed, and
+the extracted ZIP passed actual-loader discovery plus the module smoke test.

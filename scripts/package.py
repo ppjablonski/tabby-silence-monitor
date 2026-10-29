@@ -14,7 +14,7 @@ prefix = f'node_modules/{name}'
 files = ['package.json', 'dist/index.js', 'README.md', 'PLAN.md', 'WINDOWS-TESTS.md', 'LICENSE']
 # Development dependencies and build commands have no role in the installed package.
 runtime_metadata = {key: metadata[key] for key in
-                    ['name', 'version', 'description', 'license', 'keywords', 'main']}
+                    ['name', 'version', 'description', 'license', 'author', 'keywords', 'main']}
 release = root / 'release'
 release.mkdir(exist_ok=True)
 archive = release / f'{name}-{version}-windows.zip'

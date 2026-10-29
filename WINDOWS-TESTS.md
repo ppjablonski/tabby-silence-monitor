@@ -1,4 +1,4 @@
-# Windows manual verification — 0.1.0 / Tabby 1.0.238
+# Windows manual verification — 0.1.1 / Tabby 1.0.238
 
 Status: **not run**. Record date, Windows version, Tabby version, artifact SHA-256,
 actual plugin directory and pass/fail observations. Do not record terminal contents

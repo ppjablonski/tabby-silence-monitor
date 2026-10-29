@@ -1,6 +1,6 @@
 # Tabby Silence Monitor
 
-Version **0.1.0** — targets **Tabby 1.0.238**, Windows 10/11, including a per-user
+Version **0.1.1** — targets **Tabby 1.0.238**, Windows 10/11, including a per-user
 Scoop installation. Built entirely on Linux; Windows needs no Node.js, npm,
 compiler, or dependency installation.
 
@@ -12,9 +12,9 @@ finished or succeeded.
 
 ## Install on Windows
 
-1. Obtain `release/tabby-silence-monitor-0.1.0-windows.zip` from this build.
+1. Obtain `release/tabby-silence-monitor-0.1.1-windows.zip` from this build.
    Optionally compare its SHA-256 with the adjacent `.zip.sha256` file using
-   PowerShell `Get-FileHash .\tabby-silence-monitor-0.1.0-windows.zip`.
+   PowerShell `Get-FileHash .\tabby-silence-monitor-0.1.1-windows.zip`.
 2. In Tabby, go to **Settings > Plugins > Open Plugins Directory**. Use that
    actual directory: Scoop/portable installs can keep data outside `%APPDATA%`.
 3. Completely quit Tabby, including any tray instance.
@@ -107,10 +107,19 @@ scripts and legacy peer resolution avoids pulling unrelated Tabby peer packages.
 Angular and Tabby dependencies are for host API typechecking only; webpack keeps
 the runtime imports external. `npm run build` typechecks and produces a production
 CommonJS bundle. `npm run package` builds, creates the ZIP and SHA-256 checksum,
-checks its exact contents, extracts it into a temporary directory and smoke-loads
+checks its exact contents, validates discovery using the actual Tabby 1.0.238 metadata parser, extracts it into a temporary directory and smoke-loads
 its entry point with simulated host APIs. No npm or GitHub publishing occurs.
 
 Tests use deterministic timers, the actual v1.0.238 middleware-stack source as a
 test-only MIT fixture, RxJS 7, and host substitutes for Angular/Tabby UI services.
 They do not run Electron or prove Windows notification delivery. See
 [PLAN.md](PLAN.md) for source links, API decisions and dependency audit limitations.
+
+## Changes in 0.1.1
+
+Fix plugin discovery: include `author` in both source and packaged manifests.
+Tabby 1.0.238 dereferences `author.name` even when the field is missing, so it
+silently rejects the 0.1.0 package before loading the module. Replace the old
+plugin directory with 0.1.1 and fully restart Tabby. The ZIP is now validated
+through the actual upstream discovery/parser functions before its module is
+smoke-tested. Windows integration remains unverified.
